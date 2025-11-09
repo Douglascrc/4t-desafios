@@ -1,5 +1,5 @@
 using Beneficiarios.Api.Infrastructure.Interfaces;
-using Beneficiarios.Api.Model;
+using Beneficiarios.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Beneficiarios.Api.Controllers;

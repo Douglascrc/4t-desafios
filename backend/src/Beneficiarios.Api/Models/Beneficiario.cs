@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Beneficiarios.Api.Model
+namespace Beneficiarios.Api.Models
 {
     [Table("beneficiarios")]
     public class Beneficiario

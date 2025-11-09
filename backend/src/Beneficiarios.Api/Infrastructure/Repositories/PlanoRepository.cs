@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Beneficiarios.Api.Infrastructure.Db;
 using Beneficiarios.Api.Infrastructure.Interfaces;
-using Beneficiarios.Api.Model;
+using Beneficiarios.Api.Models;
 
 namespace Beneficiarios.Api.Infrastructure.Repositories;
 

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Beneficiarios.Api.Model
+namespace Beneficiarios.Api.Models
 {
     [Table("planos")]
     public class Plano
