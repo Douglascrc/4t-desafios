@@ -1,37 +1,53 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Beneficiarios.Api.Enums;
 
 namespace Beneficiarios.Api.Models
 {
     [Table("beneficiarios")]
     public class Beneficiario
     {
-        public int Id { get; set; }
-        public string NomeCompleto { get; set; }
-        public string Cpf { get; set; }
+        [Key]
+        [Column("id")]
+        public Guid Id { get; set; }
+        
+        [Required]
+        [Column("nome_completo")]
+        [MaxLength(255)]
+        public string NomeCompleto { get; set; } = string.Empty;
+        
+        [Required]
+        [Column("cpf")]
+        [MaxLength(11)]
+        public required string Cpf { get; set; }
+        
+        [Required]
+        [Column("data_nascimento")]
         public DateTime DataNascimento { get; set; }
-        public bool Status { get; set; }
-        public int PlanoId { get; set; }
-        public DateTime DataCadastro { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-
-        public Beneficiario(int id, string nomeCompleto, string cpf, DateTime dataNascimento, bool status, int planoId, DateTime dataCadastro, DateTime createdAt, DateTime updatedAt)
+        
+        [Required]
+        [Column("plano_id")]
+        public Guid PlanoId { get; set; }
+        
+        [Column("status")]
+        [MaxLength(20)]
+        public Status Status { get; set; } = Status.ATIVO;
+        
+        [Column("data_cadastro")]
+        public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
+        
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
+        public Beneficiario()
         {
-            this.Id = id;
-            this.NomeCompleto = nomeCompleto;
-            this.Cpf = cpf;
-            this.DataNascimento = dataNascimento;
-            this.Status = status;
-            this.PlanoId = planoId;
-            this.DataCadastro = dataCadastro;
-            this.CreatedAt = createdAt;
-            this.UpdatedAt = updatedAt;
+        }
+
+        public Beneficiario(string nomeCompleto, string cpf, DateTime dataNascimento, Guid planoId)
+        {
+            NomeCompleto = nomeCompleto;
+            Cpf = cpf;
+            DataNascimento = dataNascimento;
+            PlanoId = planoId;
         }
     }
-
 }

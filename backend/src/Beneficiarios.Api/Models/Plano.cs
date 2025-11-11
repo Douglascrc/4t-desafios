@@ -7,18 +7,32 @@ namespace Beneficiarios.Api.Models
     public class Plano
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("id")]
         public Guid Id { get; set; }
-        public string Nome { get; set; }
-        public string Codigo_registro_ans { get; set; }
+        
+        [Required(ErrorMessage = "Nome é Obrigatório")]
+        [Column("nome")]
+        [MaxLength(255)]
+        public string Nome { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "O código ANS é obrigatório")]
+        [Column("codigo_registro_ans")]
+        [MaxLength(50)]
+        public string CodigoRegistroAns { get; set; } = string.Empty;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
         public Plano()
         {
         }
-        public Plano(Guid id, string nome, string codigo_registro_ans)
+        public Plano(Guid id, string nome, string codigoRegistroAns)
         {
-            this.Id = id;
-            this.Nome = nome;
-            this.Codigo_registro_ans = codigo_registro_ans;
+            Id = id;
+            Nome = nome;
+            CodigoRegistroAns = codigoRegistroAns;
         }
     }
 }
