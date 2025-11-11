@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Beneficiarios.Api.Enums;
 
 namespace Beneficiarios.Api.Models
@@ -14,6 +15,7 @@ namespace Beneficiarios.Api.Models
         [Required]
         [Column("nome_completo")]
         [MaxLength(255)]
+        [JsonPropertyName("nome_completo")]
         public string NomeCompleto { get; set; } = string.Empty;
         
         [Required]
@@ -23,10 +25,12 @@ namespace Beneficiarios.Api.Models
         
         [Required]
         [Column("data_nascimento")]
+        [JsonPropertyName("data_nascimento")]
         public DateTime DataNascimento { get; set; }
         
         [Required]
         [Column("plano_id")]
+        [JsonPropertyName("plano_id")]
         public Guid PlanoId { get; set; }
         
         [Column("status")]

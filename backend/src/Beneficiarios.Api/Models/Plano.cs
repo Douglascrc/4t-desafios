@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Beneficiarios.Api.Models
 {
@@ -17,6 +18,7 @@ namespace Beneficiarios.Api.Models
         
         [Required(ErrorMessage = "O código ANS é obrigatório")]
         [Column("codigo_registro_ans")]
+        [JsonPropertyName("codigo_registro_ans")]
         [MaxLength(50)]
         public string CodigoRegistroAns { get; set; } = string.Empty;
 
