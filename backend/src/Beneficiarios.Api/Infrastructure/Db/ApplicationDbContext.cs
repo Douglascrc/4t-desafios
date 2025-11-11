@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Beneficiarios.Api.Models;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace Beneficiarios.Api.Infrastructure.Db;
 public class ApplicationDbContext : DbContext
@@ -24,6 +19,18 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Plano>()
             .Property(p => p.Id)
             .HasDefaultValueSql("gen_random_uuid()");
+
+        modelBuilder.Entity<Plano>()
+        .HasIndex(p => p.CodigoRegistroAns)
+        .IsUnique();
+
+        modelBuilder.Entity<Beneficiario>()
+            .Property(b => b.Id)
+            .HasDefaultValueSql("gen_random_uuid()");
+
+        modelBuilder.Entity<Beneficiario>()
+        .HasIndex(b => b.Cpf)
+        .IsUnique();
     }
 }
 
