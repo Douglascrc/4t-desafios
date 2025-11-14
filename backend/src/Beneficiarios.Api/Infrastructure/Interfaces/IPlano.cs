@@ -8,7 +8,11 @@ namespace Beneficiarios.Api.Infrastructure.Interfaces
 {
     public interface IPlano
     {
-        void AddPlan(Plano plano);
+        Plano AddPlan(Plano plano);
         Plano GetById(Guid id);
+        IEnumerable<Plano> GetAll();
+        Plano UpdatePlan(Guid id, Plano plano);
+        bool DeletePlan(Guid id);
+
     }
 }

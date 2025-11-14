@@ -23,9 +23,11 @@ namespace Beneficiarios.Api.Models
         public string CodigoRegistroAns { get; set; } = string.Empty;
 
         [Column("created_at")]
+        [JsonPropertyName("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         [Column("updated_at")]
+        [JsonPropertyName("updated_at")]
         public DateTime? UpdatedAt { get; set; }
         public Plano()
         {
