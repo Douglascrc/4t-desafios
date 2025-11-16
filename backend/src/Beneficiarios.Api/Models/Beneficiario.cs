@@ -34,7 +34,6 @@ namespace Beneficiarios.Api.Models
         public Guid PlanoId { get; set; }
         
         [Column("status")]
-        [MaxLength(20)]
         public Status Status { get; set; } = Status.ATIVO;
         
         [Column("data_cadastro")]

@@ -10,6 +10,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<IPlano, PlanoRepository>();
+builder.Services.AddTransient<IBeneficiario, BeneficiarioRepository>();
 
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
