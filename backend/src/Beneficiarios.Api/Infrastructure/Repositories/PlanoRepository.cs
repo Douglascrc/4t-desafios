@@ -10,9 +10,9 @@ public class PlanoRepository : IPlano
 {
     private readonly string _connectionString;
 
-    public PlanoRepository(IConfiguration configuration)
+    public PlanoRepository(string connectionString)
     {
-        _connectionString = configuration.GetConnectionString("DefaultConnection");
+        _connectionString = connectionString;
     }
     public Plano AddPlan(Plano plano)
     {

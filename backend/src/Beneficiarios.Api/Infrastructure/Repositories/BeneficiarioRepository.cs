@@ -10,9 +10,9 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
     {
         private readonly string _connectionString;
 
-        public BeneficiarioRepository(IConfiguration configuration)
+        public BeneficiarioRepository(string connectionString)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _connectionString = connectionString;
         }
         public Beneficiario AddBeneficiario(Beneficiario beneficiario)
         {
