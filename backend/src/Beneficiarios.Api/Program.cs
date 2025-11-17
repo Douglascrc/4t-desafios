@@ -11,27 +11,19 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<IPlano, PlanoRepository>();
 builder.Services.AddTransient<IBeneficiario, BeneficiarioRepository>();
+    
+var conn = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-var conn = builder.Configuration.GetConnectionString("DefaultConnection");
-
+builder.Services.AddSingleton(conn);
 builder.Services.AddDbContext<ApplicationDbContext>(opts => 
     opts.UseNpgsql(conn));
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.EnsureCreated();
-}
+DatabaseInitializer.Initialize(app.Services);
 
 app.Run();
