@@ -1,0 +1,41 @@
+# Solution files
+*.sln
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio / Rider
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.pidb
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+nuget.config
+project.lock.json
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+# Build artifacts
+*.cache
+*.log
+*.pdb
+*.dll
+*.exe
