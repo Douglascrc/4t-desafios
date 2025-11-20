@@ -2,6 +2,7 @@ using Beneficiarios.Api.Enums;
 using Beneficiarios.Api.Infrastructure.Interfaces;
 using Beneficiarios.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Beneficiarios.Api.Controllers;
 
@@ -45,16 +46,15 @@ public class BeneficiarioController : ControllerBase
         try
         {
             var beneficiario = _beneficiarioRepository.GetById(id);
-            if (beneficiario == null)
-            {
-                return NotFound(new { message = "Beneficiário não encontrado." });
-            }
-
             return Ok(beneficiario);
+        }
+        catch(KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(500, new { message = "Erro interno ao buscar beneficiário.", details = ex.Message });
         }
     }
 
@@ -69,19 +69,23 @@ public class BeneficiarioController : ControllerBase
     [HttpPut("{id}")]
     public IActionResult UpdateBeneficiario(Guid id, [FromBody] Beneficiario beneficiario)
     {
-        if (beneficiario == null)
+        try
         {
-            return BadRequest("Dados do beneficiário são obrigatórios.");
-        }
-
-        var existingBeneficiario = _beneficiarioRepository.GetById(id);
-        if (existingBeneficiario == null)
-        {
-            return NotFound($"Beneficiário com ID {id} não encontrado.");
-        }
-
         var updatedBeneficiario = _beneficiarioRepository.UpdateBeneficiario(id, beneficiario);
-        return Ok(updatedBeneficiario);
+        return Ok(updatedBeneficiario);       
+        } catch(KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Erro interno ao atualizar beneficiário.", details = ex.Message });
+        }
+
     }
 
     [HttpDelete("{id}")]
@@ -91,7 +95,7 @@ public class BeneficiarioController : ControllerBase
         var success = _beneficiarioRepository.DeleteBeneficiario(id);
         if (!success)
         {
-            return NotFound(new { message = "Beneficiário não encontrado." });
+            return NotFound(new { message = "Beneficiário não encontrado ou deletado."});
         }
 
         return NoContent();       

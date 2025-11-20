@@ -61,82 +61,77 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
 
             var sql = @"
-            SELECT b.id, b.nome_completo, b.cpf, b.data_nascimento, 
-                   b.plano_id , b.status, 
-                   b.data_cadastro, b.updated_at,
-                   p.nome , p.codigo_registro_ans
-            FROM beneficiarios b
-            LEFT JOIN planos p ON b.plano_id = p.id
-            WHERE b.id = @Id";
+            SELECT id, 
+                   nome_completo AS NomeCompleto, 
+                   cpf, 
+                   data_nascimento AS DataNascimento, 
+                   plano_id AS PlanoId, 
+                   status, 
+                   data_cadastro AS DataCadastro,
+                   updated_at AS UpdatedAt,
+                   deleted_at AS DeletedAt
+            FROM beneficiarios
+            WHERE id = @Id AND deleted_at IS NULL";
 
-            var result = connection.QueryFirstOrDefault<dynamic>(sql, new { Id = id });
+            var result = connection.QueryFirstOrDefault<Beneficiario>(sql, new { Id = id });
 
             if (result == null) 
             {
                 throw new KeyNotFoundException($"Beneficiario with id '{id}' was not found.");
             }
-            return new Beneficiario
-            {
-                Id = result.id,
-                NomeCompleto = result.nome_completo,
-                Cpf = result.cpf,
-                DataNascimento = result.data_nascimento,
-                PlanoId = result.plano_id,
-                Status = (Status)result.status,
-                DataCadastro = result.data_cadastro,
-                UpdatedAt = result.updated_at,
-            };
+            return result;
         }
 
         public IEnumerable<Beneficiario> GetAll(Status? status = null, Guid? planoId = null)
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
-            var conditions = new List<string>();
             var parameters = new DynamicParameters();
 
+            var sql = @"SELECT id,
+                        nome_completo AS NomeCompleto,
+                        cpf,
+                        data_nascimento AS DataNascimento,
+                        plano_id AS PlanoId,
+                        status,
+                        data_cadastro AS DataCadastro
+                        FROM beneficiarios
+                        WHERE deleted_at IS NULL";
+            
             if (status.HasValue)
             {
-                conditions.Add("b.status = @Status");
+                sql += " AND status = @Status";
                 parameters.Add("Status", status.Value);
             }
 
             if (planoId.HasValue)
             {
-                conditions.Add("b.plano_id = @PlanoId");
+                sql += " AND plano_id = @PlanoId";
                 parameters.Add("PlanoId", planoId.Value);
             }
 
-            var whereClause = conditions.Any() ? "WHERE " + string.Join(" AND ", conditions) : "";
+            sql += " ORDER BY data_cadastro DESC";
 
-            var sql = $@"
-            SELECT b.id, b.nome_completo, b.cpf, b.data_nascimento, 
-                   b.plano_id, b.status, 
-                   b.data_cadastro, b.updated_at,
-                   p.nome, p.codigo_registro_ans
-            FROM beneficiarios b
-            LEFT JOIN planos p ON b.plano_id = p.id
-            {whereClause}
-            ORDER BY b.data_cadastro DESC";
-
-            var results = connection.Query<dynamic>(sql, parameters);
-
-            return results.Select(result => new Beneficiario
-            {
-                Id = result.id,
-                NomeCompleto = result.nome_completo,
-                Cpf = result.cpf,
-                DataNascimento = result.data_nascimento,
-                PlanoId = result.plano_id,
-                Status = (Status)result.status,
-                DataCadastro = result.data_cadastro,
-                UpdatedAt = result.updated_at,
-            });
+            return connection.Query<Beneficiario>(sql, parameters);
+        
         }
 
         public Beneficiario UpdateBeneficiario(Guid id, Beneficiario beneficiario)
         {
             using var connection = new NpgsqlConnection(_connectionString);
+
+            if (!string.IsNullOrEmpty(beneficiario.Cpf))
+            {
+                var cpfExists = connection.ExecuteScalar<bool>(
+                    "SELECT EXISTS(SELECT 1 FROM beneficiarios WHERE cpf = @Cpf AND id != @Id)", 
+                    new { Cpf = beneficiario.Cpf, Id = id }
+                );
+
+                if (cpfExists)
+                {
+                    throw new InvalidOperationException("Beneficiário com esse CPF já existe.");
+                }
+            }
 
             var sql = @"
             UPDATE beneficiarios 
@@ -146,7 +141,7 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
                 plano_id = @PlanoId, 
                 status = @Status, 
                 updated_at = NOW()
-            WHERE id = @Id
+            WHERE id = @Id AND deleted_at IS NULL
             RETURNING id, nome_completo AS NomeCompleto, cpf, data_nascimento AS DataNascimento, 
                       plano_id AS PlanoId, status, 
                       data_cadastro AS DataCadastro, updated_at AS UpdatedAt";
@@ -163,7 +158,7 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
 
             if (result == null)
             {
-                throw new KeyNotFoundException("Beneficiário não encontrado.");
+                throw new KeyNotFoundException("Beneficiário não encontrado ou deletado.");
             }
 
             return result;
@@ -176,8 +171,9 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
             var sql = @"
             UPDATE beneficiarios 
             SET status = @Status,
-            updated_at = NOW()
-            WHERE id = @Id";
+            updated_at = NOW(),
+            deleted_at = NOW()
+            WHERE id = @Id AND deleted_at IS NULL";
 
             var rowsAffected = connection.Execute(sql, new { 
                 Id = id,
