@@ -34,6 +34,7 @@ namespace Beneficiarios.Api.Models
         public Guid? PlanoId { get; set; }
         
         [Column("status")]
+        [JsonConverter(typeof(JsonStringEnumConverter))] 
         public Status Status { get; set; } = Status.ATIVO;
         
         [Column("data_cadastro")]
@@ -41,6 +42,10 @@ namespace Beneficiarios.Api.Models
         
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
+
+        [Column("deleted_at")]
+        public DateTime? DeletedAt { get; set; }
+
         public Beneficiario()
         {
         }
