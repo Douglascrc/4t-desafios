@@ -39,8 +39,8 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
             }
 
             var sql = @"
-            INSERT INTO beneficiarios (nome_completo, cpf, data_nascimento, plano_id, status, data_cadastro) 
-            VALUES (@NomeCompleto, @Cpf, @DataNascimento, @PlanoId, @Status, NOW())
+            INSERT INTO beneficiarios (nome_completo, cpf, data_nascimento, plano_id, status, data_cadastro, deleted) 
+            VALUES (@NomeCompleto, @Cpf, @DataNascimento, @PlanoId, @Status, NOW(), @Deleted)
             RETURNING *";
 
             var result = connection.QuerySingle<Beneficiario>(sql, new
@@ -49,7 +49,8 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
                 Cpf = beneficiario.Cpf,
                 DataNascimento = beneficiario.DataNascimento,
                 PlanoId = beneficiario.PlanoId,
-                Status = beneficiario.Status
+                Status = beneficiario.Status,
+                Deleted = false
             });
 
             beneficiario.Id = result.Id;
@@ -69,9 +70,9 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
                    status, 
                    data_cadastro AS DataCadastro,
                    updated_at AS UpdatedAt,
-                   deleted_at AS DeletedAt
+                   deleted AS Deleted
             FROM beneficiarios
-            WHERE id = @Id AND deleted_at IS NULL";
+            WHERE id = @Id AND deleted = FALSE";
 
             var result = connection.QueryFirstOrDefault<Beneficiario>(sql, new { Id = id });
 
@@ -96,7 +97,7 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
                         status,
                         data_cadastro AS DataCadastro
                         FROM beneficiarios
-                        WHERE deleted_at IS NULL";
+                        WHERE deleted = FALSE";
             
             if (status.HasValue)
             {
@@ -141,7 +142,7 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
                 plano_id = @PlanoId, 
                 status = @Status, 
                 updated_at = NOW()
-            WHERE id = @Id AND deleted_at IS NULL
+            WHERE id = @Id AND deleted = FALSE
             RETURNING id, nome_completo AS NomeCompleto, cpf, data_nascimento AS DataNascimento, 
                       plano_id AS PlanoId, status, 
                       data_cadastro AS DataCadastro, updated_at AS UpdatedAt";
@@ -172,8 +173,8 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
             UPDATE beneficiarios 
             SET status = @Status,
             updated_at = NOW(),
-            deleted_at = NOW()
-            WHERE id = @Id AND deleted_at IS NULL";
+            deleted = TRUE
+            WHERE id = @Id AND deleted = FALSE";
 
             var rowsAffected = connection.Execute(sql, new { 
                 Id = id,
