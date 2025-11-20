@@ -18,6 +18,26 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
+            var planoExists = connection.ExecuteScalar<bool>(
+                "SELECT EXISTS(SELECT 1 FROM planos WHERE id = @PlanoId)", 
+                new { beneficiario.PlanoId }
+            );
+
+            if (!planoExists)
+            {
+                throw new KeyNotFoundException($"Plano com id '{beneficiario.PlanoId}' não encontrado.");
+            }
+
+            var existingCpf = connection.ExecuteScalar<bool>(
+                "SELECT EXISTS(SELECT 1 FROM beneficiarios WHERE cpf = @Cpf)", 
+                new { beneficiario.Cpf }
+            );
+
+            if (existingCpf)
+            {
+            throw new InvalidOperationException("Beneficiário com esse CPF já existe");
+            }
+
             var sql = @"
             INSERT INTO beneficiarios (nome_completo, cpf, data_nascimento, plano_id, status, data_cadastro) 
             VALUES (@NomeCompleto, @Cpf, @DataNascimento, @PlanoId, @Status, NOW())
@@ -51,8 +71,10 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
 
             var result = connection.QueryFirstOrDefault<dynamic>(sql, new { Id = id });
 
-            if (result == null) return null;
-
+            if (result == null) 
+            {
+                throw new KeyNotFoundException($"Beneficiario with id '{id}' was not found.");
+            }
             return new Beneficiario
             {
                 Id = result.id,
@@ -152,10 +174,15 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
 
             var sql = @"
-            DELETE FROM beneficiarios 
+            UPDATE beneficiarios 
+            SET status = @Status,
+            updated_at = NOW()
             WHERE id = @Id";
 
-            var rowsAffected = connection.Execute(sql, new { Id = id });
+            var rowsAffected = connection.Execute(sql, new { 
+                Id = id,
+                Status = Status.INATIVO
+                });
             return rowsAffected > 0;
         }
 
