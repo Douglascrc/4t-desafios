@@ -31,7 +31,7 @@ namespace Beneficiarios.Api.Models
         [Required]
         [Column("plano_id")]
         [JsonPropertyName("plano_id")]
-        public Guid PlanoId { get; set; }
+        public Guid? PlanoId { get; set; }
         
         [Column("status")]
         public Status Status { get; set; } = Status.ATIVO;

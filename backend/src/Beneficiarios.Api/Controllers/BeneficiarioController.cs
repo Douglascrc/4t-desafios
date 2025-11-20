@@ -18,14 +18,25 @@ public class BeneficiarioController : ControllerBase
 
     [HttpPost]
     public IActionResult AddBeneficiario([FromBody] Beneficiario beneficiario)
-    {
-        if (!ModelState.IsValid)
+    {       
+        try
         {
-            return BadRequest(ModelState);
+            var created = _beneficiarioRepository.AddBeneficiario(beneficiario);
+            return CreatedAtAction(nameof(GetBeneficiarioById), new { id = created.Id }, created);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
         }
 
-        var created = _beneficiarioRepository.AddBeneficiario(beneficiario);
-        return CreatedAtAction(nameof(GetBeneficiarioById), new { id = created.Id }, created);
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Erro interno ao criar beneficiário.", details = ex.Message });
+        }
     }
 
     [HttpGet("{id}")]
@@ -55,23 +66,23 @@ public class BeneficiarioController : ControllerBase
         
     }
 
-[HttpPut("{id}")]
-public async Task<ActionResult<Beneficiario>> UpdateBeneficiario(Guid id, [FromBody] Beneficiario beneficiario)
-{
-    if (beneficiario == null)
+    [HttpPut("{id}")]
+    public IActionResult UpdateBeneficiario(Guid id, [FromBody] Beneficiario beneficiario)
     {
-        return BadRequest("Dados do beneficiário são obrigatórios.");
-    }
+        if (beneficiario == null)
+        {
+            return BadRequest("Dados do beneficiário são obrigatórios.");
+        }
 
-    var existingBeneficiario = _beneficiarioRepository.GetById(id);
-    if (existingBeneficiario == null)
-    {
-        return NotFound($"Beneficiário com ID {id} não encontrado.");
-    }
+        var existingBeneficiario = _beneficiarioRepository.GetById(id);
+        if (existingBeneficiario == null)
+        {
+            return NotFound($"Beneficiário com ID {id} não encontrado.");
+        }
 
-    var updatedBeneficiario = _beneficiarioRepository.UpdateBeneficiario(id, beneficiario);
-    return Ok(updatedBeneficiario);
-}
+        var updatedBeneficiario = _beneficiarioRepository.UpdateBeneficiario(id, beneficiario);
+        return Ok(updatedBeneficiario);
+    }
 
     [HttpDelete("{id}")]
     public IActionResult DeleteBeneficiario(Guid id)
