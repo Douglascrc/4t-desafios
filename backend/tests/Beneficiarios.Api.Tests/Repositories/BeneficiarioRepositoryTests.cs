@@ -111,5 +111,23 @@ namespace Beneficiarios.Api.Tests
 
             Assert.Equal("Beneficiário com esse CPF já existe", exception.Message);
         }
+
+        [Fact]
+    public void Add_Beneficiario_ShouldThrowException_WhenPlano_NotExist()
+    {
+
+        var planoRepoFake = new PlanoRepositoryFake(); 
+        var repo = new BeneficiarioRepositoryFake(planoRepoFake);
+    
+        var beneficiario = new Beneficiario 
+        { 
+            NomeCompleto = "Teste", 
+            Cpf = "12345678901", 
+            PlanoId = Guid.NewGuid() 
+        };
+    
+        var ex = Assert.Throws<KeyNotFoundException>(() => repo.AddBeneficiario(beneficiario));
+        Assert.Contains($"Plano com id '{beneficiario.PlanoId}' não encontrado.", ex.Message);
+    }
    }
 }

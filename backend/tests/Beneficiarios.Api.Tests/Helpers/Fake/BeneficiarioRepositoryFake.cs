@@ -21,7 +21,12 @@ namespace Beneficiarios.Api.Tests.Helpers.Fake
             }
             if (_planoRepository != null)
             {
-                var plano = _planoRepository.GetById(beneficiario.PlanoId);
+                if (!beneficiario.PlanoId.HasValue)
+                {
+                    throw new ArgumentException("PlanoId deve ser fornecido para validar o plano.", nameof(beneficiario.PlanoId));
+                }
+
+                var plano = _planoRepository.GetById(beneficiario.PlanoId.Value);
                 if (plano == null)
                 {
                     throw new KeyNotFoundException($"Plano com ID {beneficiario.PlanoId} não encontrado");
@@ -72,7 +77,12 @@ namespace Beneficiarios.Api.Tests.Helpers.Fake
             var existing = _beneficiarios.FirstOrDefault(b => b.Id == id);
             if (existing == null)
             {
-            throw new KeyNotFoundException("Beneficiário não encontrado.");
+            throw new KeyNotFoundException("Beneficiário não encontrado ou deletado.");
+            }
+            var existingCpf = _beneficiarios.FirstOrDefault(b => b.Cpf == beneficiario.Cpf && b.Id != id);
+            if (existingCpf != null)
+            {
+                throw new InvalidOperationException("Beneficiário com esse CPF já existe.");;
             }
 
             existing.NomeCompleto = beneficiario.NomeCompleto;
