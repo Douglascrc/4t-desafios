@@ -18,26 +18,45 @@ public class PlanoRepository : IPlano
     {
         using var connection = new NpgsqlConnection(_connectionString);
 
-        var sql = @"
-            INSERT INTO planos  (nome, codigo_registro_ans, created_at) 
-            VALUES (@Nome, @CodigoRegistroAns, NOW())
-            RETURNING *";
+        var nomeExists = connection.ExecuteScalar<bool>(
+                "SELECT EXISTS(SELECT 1 FROM planos WHERE nome = @Nome)", 
+                new { plano.Nome });
 
-        var inserted = connection.QuerySingle<Plano>(sql, new { Nome = plano.Nome, CodigoRegistroAns = plano.CodigoRegistroAns });
-        plano.Id = inserted.Id;
-        return plano;
-    }
+        if (nomeExists)
+            throw new InvalidOperationException($"Já existe um plano com o nome '{plano.Nome}'.");
+
+            var codigoExists = connection.ExecuteScalar<bool>(
+                "SELECT EXISTS(SELECT 1 FROM planos WHERE codigo_registro_ans = @Codigo)", 
+                new { Codigo = plano.CodigoRegistroAns });
+
+        if (codigoExists)
+            throw new InvalidOperationException($"Já existe um plano com o código ANS '{plano.CodigoRegistroAns}'.");
+
+            var sql = @"
+                INSERT INTO planos (id, nome, codigo_registro_ans, created_at)
+                VALUES (@Id, @Nome, @CodigoRegistroAns, NOW())
+                RETURNING *";
+
+            if (plano.Id == Guid.Empty) plano.Id = Guid.NewGuid();
+
+            return connection.QuerySingle<Plano>(sql, plano);
+        }
     public Plano GetById(Guid id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
 
         var sql = @"
-            SELECT id, nome, codigo_registro_ans AS CodigoRegistroAns, created_at, updated_at 
+            SELECT id, nome, codigo_registro_ans AS CodigoRegistroAns, 
+                   created_at AS CreatedAt, updated_at AS UpdatedAt 
             FROM planos 
             WHERE id = @Id";
 
         var result = connection.QueryFirstOrDefault<Plano>(sql, new { Id = id, });
 
+        if (result == null)
+        {
+            throw new KeyNotFoundException($"Plano com id '{id}' não encontrado.");
+        }
         return result;
     }
   
@@ -46,7 +65,7 @@ public class PlanoRepository : IPlano
         using var connection = new NpgsqlConnection(_connectionString);
 
         var sql = @"
-            SELECT id, nome, codigo_registro_ans AS CodigoRegistroAns, created_at, updated_at 
+            SELECT id, nome, codigo_registro_ans AS CodigoRegistroAns, created_at, updated_at AS UpdatedAt
             FROM planos";
 
         return connection.Query<Plano>(sql);
@@ -56,54 +75,64 @@ public class PlanoRepository : IPlano
     {
         using var connection = new NpgsqlConnection(_connectionString);
 
-        var sql = @"
-        UPDATE planos 
-        SET nome = @Nome, 
-            codigo_registro_ans = @CodigoRegistroAns, 
-            updated_at = NOW()
-        WHERE id = @Id
-        RETURNING id, 
-                  nome, 
-                  codigo_registro_ans AS CodigoRegistroAns, 
-                  created_at, 
-                  updated_at AS UpdatedAt";
+        var exists = connection.ExecuteScalar<bool>("SELECT EXISTS(SELECT 1 FROM planos WHERE id = @Id)", new { Id = id });
+        if (!exists)
+        {
+            throw new KeyNotFoundException($"Plano com id '{id}' não encontrado.");
+        }
+            var nomeExists = connection.ExecuteScalar<bool>(
+                "SELECT EXISTS(SELECT 1 FROM planos WHERE nome = @Nome AND id != @Id)", 
+                new { plano.Nome, Id = id });
 
-        var result = connection.QueryFirstOrDefault<Plano>(sql, new
+        if (nomeExists)
         {
-            Id = id,
-            Nome = plano.Nome,
-            CodigoRegistroAns = plano.CodigoRegistroAns
-        });
-        if (result == null)
-        {
-            throw new KeyNotFoundException("Plano não encontrado.");
+            throw new InvalidOperationException($"Já existe um plano com o nome '{plano.Nome}'.");            
         }
 
-        return result;
+            
+        var codigoExists = connection.ExecuteScalar<bool>(
+            "SELECT EXISTS(SELECT 1 FROM planos WHERE codigo_registro_ans = @Codigo AND id != @Id)", 
+            new { Codigo = plano.CodigoRegistroAns, Id = id });
+
+        if (codigoExists)
+        {
+            throw new InvalidOperationException($"Já existe um plano com o código ANS '{plano.CodigoRegistroAns}'.");
+        }
+
+        var sql = @"
+                UPDATE planos 
+                SET nome = @Nome, 
+                    codigo_registro_ans = @CodigoRegistroAns,
+                    updated_at = NOW()
+                WHERE id = @Id
+                RETURNING id, 
+                          nome, 
+                          codigo_registro_ans AS CodigoRegistroAns, 
+                          created_at AS CreatedAt, 
+                          updated_at AS UpdatedAt";
+
+        plano.Id = id;
+        plano.UpdatedAt = DateTime.UtcNow;
+        return connection.QuerySingle<Plano>(sql, plano);
     }
     public bool DeletePlan(Guid id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
 
-        
-        var beneficiarioCheck = @"
-            SELECT COUNT(*) 
-            FROM beneficiarios 
-            WHERE plano_id = @Id";
-
-        var beneficiaryCount = connection.QuerySingle<int>(beneficiarioCheck, new { Id = id });
-
-        if (beneficiaryCount > 0)
+        var exists = connection.ExecuteScalar<bool>("SELECT EXISTS(SELECT 1 FROM planos WHERE id = @Id)", new { Id = id });
+            if (!exists)
         {
-            throw new InvalidOperationException("Não é possível excluir um plano que possui beneficiários vinculados.");
+            throw new KeyNotFoundException($"Plano com id '{id}' não encontrado.");
         }
 
-        var sql = @"
-            DELETE FROM planos 
-            WHERE id = @Id";
-
-        var rowsAffected = connection.Execute(sql, new { Id = id });
-        return rowsAffected > 0;
+        var temBeneficiarios = connection.ExecuteScalar<bool>("SELECT EXISTS(SELECT 1 FROM beneficiarios WHERE plano_id = @Id)", new { Id = id });
+        if (temBeneficiarios)
+        {
+            throw new InvalidOperationException("Não é possível excluir o plano pois existem beneficiários vinculados a ele.");
+        }
+        
+        var rows = connection.Execute("DELETE FROM planos WHERE id = @Id", new { Id = id });
+        return rows > 0;
     }
 }
         
