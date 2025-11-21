@@ -113,7 +113,7 @@ namespace Beneficiarios.Api.Tests
         }
 
         [Fact]
-    public void Add_Beneficiario_ShouldThrowException_WhenPlano_NotExist()
+        public void Add_Beneficiario_ShouldThrowException_WhenPlano_NotExist()
     {
 
         var planoRepoFake = new PlanoRepositoryFake(); 
