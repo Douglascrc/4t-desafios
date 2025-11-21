@@ -110,3 +110,18 @@ curl -X GET "http://localhost:5000/api/planos" | python3 -m json.tool
     }
 ]
 ```
+## Todos os Endpoints da API
+
+### Beneficiários
+* `POST /api/beneficiarios` - Criar um novo beneficiário
+* `PUT /api/beneficiarios/{id}` - Atualizar beneficiário existente
+* `DELETE /api/beneficiarios/{id}` - Deletar beneficiário (soft delete)
+* `GET /api/beneficiarios/{id}` - Buscar beneficiário por ID
+* `GET /api/beneficiarios` - Listar beneficiários com filtros (status, plano_id)
+
+### Planos de Saúde
+* `POST /api/planos` - Criar um novo plano de saúde
+* `PUT /api/planos/{id}` - Atualizar plano de saúde existente
+* `DELETE /api/planos/{id}` - Deletar plano de saúde
+* `GET /api/planos/{id}` - Buscar plano de saúde por ID
+* `GET /api/planos` - Listar planos de saúde
