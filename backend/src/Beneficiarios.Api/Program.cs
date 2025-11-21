@@ -2,12 +2,22 @@ using Microsoft.EntityFrameworkCore;
 using Beneficiarios.Api.Infrastructure.Db;
 using Beneficiarios.Api.Infrastructure.Interfaces;
 using Beneficiarios.Api.Infrastructure.Repositories;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+builder.Services.AddSwaggerGen(c => 
+{
+    c.EnableAnnotations();
+});
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<IPlano, PlanoRepository>();
 builder.Services.AddTransient<IBeneficiario, BeneficiarioRepository>();
