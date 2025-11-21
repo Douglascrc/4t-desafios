@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using Beneficiarios.Api.Enums;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Beneficiarios.Api.Models
 {
@@ -9,6 +10,7 @@ namespace Beneficiarios.Api.Models
     public class Beneficiario
     {
         [Key]
+        [SwaggerSchema(ReadOnly = true)]
         [Column("id")]
         public Guid Id { get; set; }
         
@@ -38,12 +40,17 @@ namespace Beneficiarios.Api.Models
         public Status Status { get; set; } = Status.ATIVO;
         
         [Column("data_cadastro")]
+        [JsonPropertyName("data_cadastro")]
+        [SwaggerSchema(ReadOnly = true)]
         public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
         
         [Column("updated_at")]
+        [JsonPropertyName("updated_at")]
+        [SwaggerSchema(ReadOnly = true)]
         public DateTime? UpdatedAt { get; set; }
 
         [Column("deleted")]
+        [SwaggerSchema(ReadOnly = true)]
         public bool Deleted { get; set; } = false;
 
         public Beneficiario()

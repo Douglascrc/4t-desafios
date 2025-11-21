@@ -60,6 +60,15 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
         public Beneficiario GetById(Guid id)
         {
             using var connection = new NpgsqlConnection(_connectionString);
+            var exists = connection.ExecuteScalar<bool>(
+                "SELECT EXISTS(SELECT 1 FROM beneficiarios WHERE id = @Id AND deleted = FALSE)",
+                new { Id = id }
+            );
+
+            if (!exists)
+            {
+                throw new KeyNotFoundException("Beneficiário não encontrado ou já excluído.");
+            }
 
             var sql = @"
             SELECT id, 
@@ -74,13 +83,7 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
             FROM beneficiarios
             WHERE id = @Id AND deleted = FALSE";
 
-            var result = connection.QueryFirstOrDefault<Beneficiario>(sql, new { Id = id });
-
-            if (result == null) 
-            {
-                throw new KeyNotFoundException($"Beneficiario with id '{id}' was not found.");
-            }
-            return result;
+            return connection.QuerySingle<Beneficiario>(sql, new { Id = id });  
         }
 
         public IEnumerable<Beneficiario> GetAll(Status? status = null, Guid? planoId = null)
@@ -121,6 +124,16 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
+            var exists = connection.ExecuteScalar<bool>(
+                "SELECT EXISTS(SELECT 1 FROM beneficiarios WHERE id = @Id AND deleted = FALSE)",
+                new { Id = id }
+            );
+
+            if (!exists)
+            {
+                throw new KeyNotFoundException("Beneficiário não encontrado ou deletado.");
+            }
+
             if (!string.IsNullOrEmpty(beneficiario.Cpf))
             {
                 var cpfExists = connection.ExecuteScalar<bool>(
@@ -147,7 +160,7 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
                       plano_id AS PlanoId, status, 
                       data_cadastro AS DataCadastro, updated_at AS UpdatedAt";
 
-            var result = connection.QueryFirstOrDefault<Beneficiario>(sql, new
+            return connection.QuerySingle<Beneficiario>(sql, new
             {
                 Id = id,
                 NomeCompleto = beneficiario.NomeCompleto,
@@ -156,18 +169,13 @@ namespace Beneficiarios.Api.Infrastructure.Repositories
                 PlanoId = beneficiario.PlanoId,
                 Status = beneficiario.Status
             });
-
-            if (result == null)
-            {
-                throw new KeyNotFoundException("Beneficiário não encontrado ou deletado.");
-            }
-
-            return result;
         }
 
         public bool DeleteBeneficiario(Guid id)
         {
+            GetById(id);
             using var connection = new NpgsqlConnection(_connectionString);
+            
 
             var sql = @"
             UPDATE beneficiarios 

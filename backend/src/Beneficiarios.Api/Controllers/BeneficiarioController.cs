@@ -2,7 +2,6 @@ using Beneficiarios.Api.Enums;
 using Beneficiarios.Api.Infrastructure.Interfaces;
 using Beneficiarios.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Beneficiarios.Api.Controllers;
 
@@ -18,6 +17,7 @@ public class BeneficiarioController : ControllerBase
     }
 
     [HttpPost]
+    
     public IActionResult AddBeneficiario([FromBody] Beneficiario beneficiario)
     {       
         try
@@ -59,10 +59,17 @@ public class BeneficiarioController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetAllBeneficiarios([FromQuery] Status? status = null, [FromQuery] Guid? planoId = null)
+    public IActionResult GetAllBeneficiarios([FromQuery] Status? status = null, [FromQuery(Name = "plano_id")] Guid? planoId = null)
     {
-        var beneficiarios = _beneficiarioRepository.GetAll(status, planoId);
-        return Ok(beneficiarios);
+        try
+        {
+            var beneficiarios = _beneficiarioRepository.GetAll(status, planoId);
+            return Ok(beneficiarios);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Erro interno ao buscar beneficiários.", details = ex.Message });
+        }
         
     }
 
@@ -91,14 +98,17 @@ public class BeneficiarioController : ControllerBase
     [HttpDelete("{id}")]
     public IActionResult DeleteBeneficiario(Guid id)
     {
-       
-        var success = _beneficiarioRepository.DeleteBeneficiario(id);
-        if (!success)
+        try
         {
-            return NotFound(new { message = "Beneficiário não encontrado ou deletado."});
-        }
-
-        return NoContent();       
+            _beneficiarioRepository.DeleteBeneficiario(id);
+            return Ok();
+        } catch(KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        } catch(Exception ex)
+        {
+            return StatusCode(500, new { message = "Erro interno ao deletar beneficiário.", details = ex.Message });
+        }      
     }
 }
     
